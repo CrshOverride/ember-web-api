@@ -38,7 +38,11 @@
     "ember-try": "0.0.6"
   },
   "keywords": [
-    "ember-addon"
+    "ember-addon",
+    "web-api",
+    "dot-net",
+    "web-api-serializer",
+    "web-api-adapter"
   ],
   "dependencies": {
     "ember-cli-babel": "^5.1.3"
