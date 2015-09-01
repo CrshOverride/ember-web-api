@@ -1,7 +1,7 @@
 {
   "name": "ember-web-api",
   "version": "0.0.2",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "Ember CLI Addon for connecting Ember Data to ASP.NET Web API.",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -11,11 +11,14 @@
     "start": "ember server",
     "test": "ember try:testall"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CrshOverride/ember-web-api.git"
+  },
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "",
+  "author": "Justin Niessner",
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.1.2",
