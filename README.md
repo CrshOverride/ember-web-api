@@ -1,6 +1,68 @@
-# Ember-web-api
+# Ember - Web API
 
-This README outlines the details of collaborating on this Ember addon.
+This project is simply a Serializer and Adapter for working with Microsoft ASP.NET Web API endpoints.
+
+## Usage
+
+### Prerequisites
+
+Currently, the Serializer assumes that your Web API endpoint's response will contain `camelCased` property names rather than the default .NET `PascalCase` names.
+
+Luckily, [Newtonsoft's JSON.NET](http://www.newtonsoft.com/json) makes this relatively trivial and it's already the default serializer, so you're all set. You just need to add the following code to your API's startup configuration:
+
+```csharp
+var formatters = GlobalConfiguration.Configuration.Formatters;
+var jsonFormatter = formatters.JsonFormatter;
+var settings = jsonFormatter.SerializerSettings;
+settings.Formatting = Formatting.Indented;
+settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+```
+
+### Installation
+
+Installation is a breeze. Simply run (from your Ember CLI project):
+
+```
+ember install ember-web-api
+```
+
+### Usage
+
+First, generate your application Adapter:
+
+```
+ember generate adapter application
+```
+
+And then modify your code to extend the Web API Adapter instead:
+
+```javascript
+import WebApiAdapter from 'ember-web-api/adapters/web-api';
+
+export default WebApiAdapter.extend({
+});
+```
+
+Now do the same for the Serializer:
+
+```
+ember generate serializer application
+```
+
+```javascript
+import WebApiSerializer from 'ember-web-api/serializers/web-api';
+
+export default WebApiSerializer.extend({
+
+});
+```
+
+That's it! Your application should now be configured to consume Web API endpoints.
+
+### Extending and Configuring
+The Web API Adapter and Serializer both extend Ember Data's DS.RESTAdapter and DS.RESTSerializer and accept the same options.
+
+## Contributing
 
 ## Installation
 
