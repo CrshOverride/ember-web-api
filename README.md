@@ -2,6 +2,7 @@
 
 [![Ember Observer Score](http://emberobserver.com/badges/ember-web-api.svg)](http://emberobserver.com/addons/ember-web-api)
 [![npm version](https://badge.fury.io/js/ember-web-api.svg)](http://badge.fury.io/js/ember-web-api)
+[![Travis CI Status](https://travis-ci.org/CrshOverride/ember-web-api.svg?branch=master)](https://travis-ci.org/CrshOverride/ember-web-api.svg?branch=master)
 
 This project is simply a Serializer and Adapter for working with Microsoft ASP.NET Web API endpoints.
 
