@@ -5,15 +5,15 @@ node_js:
 
 sudo: false
 
+cache:
+  directories:
+    - node_modules
+
 env:
   - EMBER_TRY_SCENARIO=default
   - EMBER_TRY_SCENARIO=ember-release
   - EMBER_TRY_SCENARIO=ember-beta
   - EMBER_TRY_SCENARIO=ember-canary
-  
- cache:
-  directories:
-    - node_modules
 
 matrix:
   fast_finish: true
