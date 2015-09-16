@@ -1,5 +1,8 @@
 # Ember - Web API
 
+[![Ember Observer Score](http://emberobserver.com/badges/ember-web-api.svg)](http://emberobserver.com/addons/ember-web-api)
+[![npm version](https://badge.fury.io/js/ember-web-api.svg)](http://badge.fury.io/js/ember-web-api)
+
 This project is simply a Serializer and Adapter for working with Microsoft ASP.NET Web API endpoints.
 
 ## Usage
