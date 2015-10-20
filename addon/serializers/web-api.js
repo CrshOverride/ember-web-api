@@ -65,15 +65,16 @@ export default DS.RESTSerializer.extend({
       let relatedRecord = record[key];
 
       if(relatedRecord) {
+        let relationshipType = typeof relationship.type === 'string' ? store.modelFor(relationship.type) : relationship.type;
         if(relationship.kind === 'belongsTo') {
-          this.sideloadItem(store, payload, relationship.type, relatedRecord);
-          record[key] = relatedRecord[store.serializerFor(relationship.type.modelName).primaryKey];
-          this.extractRelationships(store, payload, relatedRecord, relationship.type);
+          this.sideloadItem(store, payload, relationshipType, relatedRecord);
+          record[key] = relatedRecord[store.serializerFor(relationshipType.modelName).primaryKey];
+          this.extractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
-            this.sideloadItem(store, payload, relationship.type, item);
-            relatedRecord[index] = item[store.serializerFor(relationship.type.modelName).primaryKey];
-            this.extractRelationships(store, payload, item, relationship.type);
+            this.sideloadItem(store, payload, relationshipType, item);
+            relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
+            this.extractRelationships(store, payload, item, relationshipType);
           });
         }
       }
