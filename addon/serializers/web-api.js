@@ -45,19 +45,22 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  extractErrors: function(store, typeClass, payload, id) {
-    let modelState = payload.modelState,
-        payloadKey = `${typeClass.modelName}.`,
-        formattedPayload = { errors: { } },
-        key;
-
-    for(key in modelState) {
-      if(modelState.hasOwnProperty(key)) {
-        formattedPayload.errors[key.replace(payloadKey, '').camelize()] = modelState[key];
-      }
-    }
-
-    return this._super(store, typeClass, formattedPayload, id);
+  extractErrors: function extractErrors(store, typeClass, payload, id) {
+      let payloadKey = typeClass.modelName + '.';
+      this.clearModelName(payload.errors, payloadKey)
+      return this._super(store, typeClass,payload, id);
+  },
+  clearModelName: function(errors, modelName) {
+    // Since the new JSON API InvalidError structure appeared we need to handle it.
+    // I know it sucks but for now the extractErrors hook gets the data pre-coocked into
+    // JSON API errors :\
+    errors.forEach(function(error) {
+      var pointer = error.source.pointer;
+      let lastIndex =  error.source.pointer.lastIndexOf('/') + 1;
+      pointer = pointer.replace('/data/attributes/' + modelName, '/data/attributes/');
+      pointer = pointer.slice(0, lastIndex) + pointer.slice(lastIndex).camelize();
+      error.source.pointer = pointer;
+    });
   },
 
   extractRelationships: function(store, payload, record, type) {
