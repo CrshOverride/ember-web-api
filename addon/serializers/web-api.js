@@ -21,11 +21,13 @@ export default DS.RESTSerializer.extend({
 
   serializeHasMany: function(snapshot, json, relationship) {
     let key = this.payloadKeyFromModelName(relationship.key);
-    json[key] = [];
+    if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
+      json[key] = [];
 
-    snapshot.get(relationship.key).forEach((i) => {
-      json[key].push(this.serialize(i, { includeId: true }));
-    });
+      snapshot.hasMany(relationship.key).forEach((i) => {
+        json[key].push(this.serialize(i, { includeId: true }));
+      });
+    }
   },
 
   serializeIntoHash: function(json, typeClass, snapshot, options) {
