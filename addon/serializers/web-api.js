@@ -1,7 +1,8 @@
 import DS from 'ember-data';
 
 export default DS.RESTSerializer.extend({
-  extract: function(store, primaryType, payload, id, requestType) {
+  isNewSerializerAPI: true,
+  normalizeResponse: function(store, primaryType, payload, id, requestType) {
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
         key = isCollection ? primaryType.modelName.pluralize() : primaryType.modelName;
@@ -10,10 +11,10 @@ export default DS.RESTSerializer.extend({
 
     if(isCollection) {
       payload.forEach((item) => {
-        this.extractRelationships(store, payloadWithRoot, item, primaryType);
+        this.privateExtractRelationships(store, payloadWithRoot, item, primaryType);
       });
     } else {
-      this.extractRelationships(store, payloadWithRoot, payload, primaryType);
+      this.privateExtractRelationships(store, payloadWithRoot, payload, primaryType);
     }
 
     return this._super(store, primaryType, payloadWithRoot, id, requestType);
@@ -47,10 +48,17 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  extractErrors: function extractErrors(store, typeClass, payload, id) {
-      let payloadKey = typeClass.modelName + '.';
-      this.clearModelName(payload.errors, payloadKey)
-      return this._super(store, typeClass,payload, id);
+  normalizeErrors: function normalizeErrors(typeClass, payload) {
+    let payloadKey = `${typeClass.modelName}.`,
+      key,
+      keys = Object.keys(payload);
+      keys.forEach(function(key) {
+        if(payload.hasOwnProperty(key)) {
+          payload[key.replace(payloadKey, '').camelize()] = payload[key];
+          delete payload[key];
+        }
+      });
+      return this._super(typeClass, payload);
   },
   clearModelName: function(errors, modelName) {
     // Since the new JSON API InvalidError structure appeared we need to handle it.
@@ -65,7 +73,7 @@ export default DS.RESTSerializer.extend({
     });
   },
 
-  extractRelationships: function(store, payload, record, type) {
+  privateExtractRelationships: function(store, payload, record, type) {
     type.eachRelationship((key, relationship) => {
       let relatedRecord = record[key];
 
@@ -74,13 +82,13 @@ export default DS.RESTSerializer.extend({
         if(relationship.kind === 'belongsTo') {
           this.sideloadItem(store, payload, relationshipType, relatedRecord);
           record[key] = relatedRecord[store.serializerFor(relationshipType.modelName).primaryKey];
-          this.extractRelationships(store, payload, relatedRecord, relationshipType);
+          this.privateExtractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
             if (this.sideloadItem(store, payload, relationshipType, item)) {
             relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
             }
-            this.extractRelationships(store, payload, item, relationshipType);
+            this.privateExtractRelationships(store, payload, item, relationshipType);
           });
         }
       }
