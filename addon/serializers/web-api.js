@@ -85,6 +85,11 @@ export default DS.RESTSerializer.extend({
   },
 
   sideloadItem: function(store, payload, type, record) {
+    // In case the returned data is just a number and not an actual object ignore
+    if (!(record instanceof Object)) {
+      return;
+    }
+
     let key = type.modelName.pluralize(),
         arr = payload[key] || [],
         pk = store.serializerFor(type.modelName).primaryKey,
