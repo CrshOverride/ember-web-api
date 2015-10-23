@@ -75,8 +75,9 @@ export default DS.RESTSerializer.extend({
           this.extractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
-            this.sideloadItem(store, payload, relationshipType, item);
+            if (this.sideloadItem(store, payload, relationshipType, item)) {
             relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
+            }
             this.extractRelationships(store, payload, item, relationshipType);
           });
         }
@@ -85,9 +86,8 @@ export default DS.RESTSerializer.extend({
   },
 
   sideloadItem: function(store, payload, type, record) {
-    // In case the returned data is just a number and not an actual object ignore
     if (!(record instanceof Object)) {
-      return;
+      return false;
     }
 
     let key = type.modelName.pluralize(),
@@ -96,10 +96,11 @@ export default DS.RESTSerializer.extend({
         id = record[pk];
 
     if(typeof arr.findBy(pk, id) !== 'undefined') {
-      return;
+      return true;
     }
 
     arr.push(record);
     payload[key] = arr;
+    return true;
   }
 });
