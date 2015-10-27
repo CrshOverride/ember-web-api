@@ -11,10 +11,10 @@ export default DS.RESTSerializer.extend({
 
     if(isCollection) {
       payload.forEach((item) => {
-        this.privateExtractRelationships(store, payloadWithRoot, item, primaryType);
+        this._extractRelationships(store, payloadWithRoot, item, primaryType);
       });
     } else {
-      this.privateExtractRelationships(store, payloadWithRoot, payload, primaryType);
+      this._extractRelationships(store, payloadWithRoot, payload, primaryType);
     }
 
     return this._super(store, primaryType, payloadWithRoot, id, requestType);
@@ -73,7 +73,7 @@ export default DS.RESTSerializer.extend({
     });
   },
 
-  privateExtractRelationships: function(store, payload, record, type) {
+  _extractRelationships: function(store, payload, record, type) {
     type.eachRelationship((key, relationship) => {
       let relatedRecord = record[key];
 
@@ -82,13 +82,13 @@ export default DS.RESTSerializer.extend({
         if(relationship.kind === 'belongsTo') {
           this.sideloadItem(store, payload, relationshipType, relatedRecord);
           record[key] = relatedRecord[store.serializerFor(relationshipType.modelName).primaryKey];
-          this.privateExtractRelationships(store, payload, relatedRecord, relationshipType);
+          this._extractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
             if (this.sideloadItem(store, payload, relationshipType, item)) {
             relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
             }
-            this.privateExtractRelationships(store, payload, item, relationshipType);
+            this._extractRelationships(store, payload, item, relationshipType);
           });
         }
       }
