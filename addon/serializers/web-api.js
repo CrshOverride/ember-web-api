@@ -1,7 +1,8 @@
 import DS from 'ember-data';
 
 export default DS.RESTSerializer.extend({
-  extract: function(store, primaryType, payload, id, requestType) {
+  isNewSerializerAPI: true,
+  normalizeResponse: function(store, primaryType, payload, id, requestType) {
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
         key = isCollection ? primaryType.modelName.pluralize() : primaryType.modelName;
@@ -10,10 +11,10 @@ export default DS.RESTSerializer.extend({
 
     if(isCollection) {
       payload.forEach((item) => {
-        this.extractRelationships(store, payloadWithRoot, item, primaryType);
+        this._extractRelationships(store, payloadWithRoot, item, primaryType);
       });
     } else {
-      this.extractRelationships(store, payloadWithRoot, payload, primaryType);
+      this._extractRelationships(store, payloadWithRoot, payload, primaryType);
     }
 
     return this._super(store, primaryType, payloadWithRoot, id, requestType);
@@ -21,11 +22,13 @@ export default DS.RESTSerializer.extend({
 
   serializeHasMany: function(snapshot, json, relationship) {
     let key = this.payloadKeyFromModelName(relationship.key);
-    json[key] = [];
+    if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
+      json[key] = [];
 
-    snapshot.get(relationship.key).forEach((i) => {
-      json[key].push(this.serialize(i, { includeId: true }));
-    });
+      snapshot.hasMany(relationship.key).forEach((i) => {
+        json[key].push(this.serialize(i, { includeId: true }));
+      });
+    }
   },
 
   serializeIntoHash: function(json, typeClass, snapshot, options) {
@@ -45,22 +48,32 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  extractErrors: function(store, typeClass, payload, id) {
-    let modelState = payload.modelState,
-        payloadKey = `${typeClass.modelName}.`,
-        formattedPayload = { errors: { } },
-        key;
+  normalizeErrors: function normalizeErrors(typeClass, payload) {
+    let payloadKey = `${typeClass.modelName}.`,
+        keys = Object.keys(payload);
 
-    for(key in modelState) {
-      if(modelState.hasOwnProperty(key)) {
-        formattedPayload.errors[key.replace(payloadKey, '').camelize()] = modelState[key];
+    keys.forEach(function(key) {
+      if(payload.hasOwnProperty(key)) {
+        payload[key.replace(payloadKey, '').camelize()] = payload[key];
+        delete payload[key];
       }
-    }
-
-    return this._super(store, typeClass, formattedPayload, id);
+    });
+    return this._super(typeClass, payload);
+  },
+  clearModelName: function(errors, modelName) {
+    // Since the new JSON API InvalidError structure appeared we need to handle it.
+    // I know it sucks but for now the extractErrors hook gets the data pre-coocked into
+    // JSON API errors :\
+    errors.forEach(function(error) {
+      var pointer = error.source.pointer;
+      let lastIndex =  error.source.pointer.lastIndexOf('/') + 1;
+      pointer = pointer.replace('/data/attributes/' + modelName, '/data/attributes/');
+      pointer = pointer.slice(0, lastIndex) + pointer.slice(lastIndex).camelize();
+      error.source.pointer = pointer;
+    });
   },
 
-  extractRelationships: function(store, payload, record, type) {
+  _extractRelationships: function(store, payload, record, type) {
     type.eachRelationship((key, relationship) => {
       let relatedRecord = record[key];
 
@@ -69,12 +82,13 @@ export default DS.RESTSerializer.extend({
         if(relationship.kind === 'belongsTo') {
           this.sideloadItem(store, payload, relationshipType, relatedRecord);
           record[key] = relatedRecord[store.serializerFor(relationshipType.modelName).primaryKey];
-          this.extractRelationships(store, payload, relatedRecord, relationshipType);
+          this._extractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
-            this.sideloadItem(store, payload, relationshipType, item);
+            if (this.sideloadItem(store, payload, relationshipType, item)) {
             relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
-            this.extractRelationships(store, payload, item, relationshipType);
+            }
+            this._extractRelationships(store, payload, item, relationshipType);
           });
         }
       }
@@ -82,16 +96,21 @@ export default DS.RESTSerializer.extend({
   },
 
   sideloadItem: function(store, payload, type, record) {
+    if (!(record instanceof Object)) {
+      return false;
+    }
+
     let key = type.modelName.pluralize(),
         arr = payload[key] || [],
         pk = store.serializerFor(type.modelName).primaryKey,
         id = record[pk];
 
     if(typeof arr.findBy(pk, id) !== 'undefined') {
-      return;
+      return true;
     }
 
     arr.push(record);
     payload[key] = arr;
+    return true;
   }
 });
