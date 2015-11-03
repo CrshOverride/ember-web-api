@@ -1,10 +1,12 @@
+import Ember from 'ember';
 import DS from 'ember-data';
+import { pluralize } from 'ember-inflector';
 
 export default DS.RESTSerializer.extend({
   extract: function(store, primaryType, payload, id, requestType) {
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
-        key = isCollection ? primaryType.modelName.pluralize() : primaryType.modelName;
+        key = isCollection ? pluralize(primaryType.modelName) : primaryType.modelName;
 
     payloadWithRoot[key] = payload;
 
@@ -82,8 +84,8 @@ export default DS.RESTSerializer.extend({
   },
 
   sideloadItem: function(store, payload, type, record) {
-    let key = type.modelName.pluralize(),
-        arr = payload[key] || [],
+    let key = pluralize(type.modelName),
+        arr = payload[key] || new Ember.ArrayProxy([]),
         pk = store.serializerFor(type.modelName).primaryKey,
         id = record[pk];
 
