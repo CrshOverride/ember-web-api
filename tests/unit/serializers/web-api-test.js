@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import { moduleFor, test } from 'ember-qunit';
 
 moduleFor('serializer:web-api', 'Unit | Serializer | web api', {
@@ -15,28 +16,79 @@ moduleFor('serializer:web-api', 'Unit | Serializer | web api', {
 test('it parses a simple record', function(assert) {
   let serializer = this.subject(),
       type = this.store.modelFor('droid'),
-      hash = {
+      response = {
+        id: 1,
         type: 'protocol',
         model: 'C3PO'
       },
-      parsed = serializer.extract(this.store, type, hash, null, 'find');
+      parsed = serializer.normalizeResponse(this.store, type, response, 1, 'findRecord'),
+      expected = {
+        data: {
+          type: 'droid',
+          id: '1',
+          attributes: {
+            type: 'protocol',
+            model: 'C3PO'
+          },
+          relationships: {}
+        },
+        included: []
+      };
 
-  assert.deepEqual(hash, parsed);
+  assert.deepEqual(expected, parsed);
 });
 
 test('it parses a basic hasMany relationship', function(assert) {
   let serializer = this.subject(),
       type = this.store.modelFor('humanoid'),
-      hash = {
+      response = {
+        id: 1,
         name: 'Luke Skywalker',
         isJedi: true,
-        droids: [
-          { type: 'protocol', model: 'C3PO' },
-          { type: 'astromech', model: 'R2D2' }
-        ]
+        droids: Ember.A([
+          { id: 1, type: 'protocol', model: 'C3PO' },
+          { id: 2, type: 'astromech', model: 'R2D2' }
+        ])
+      },
+      parsed = serializer.normalizeResponse(this.store, type, response, 1, 'findRecord'),
+      expected = {
+        data: {
+          type: 'humanoid',
+          id: '1',
+          attributes: {
+            name: 'Luke Skywalker',
+            isJedi: true
+          },
+          relationships: {
+          droids: {
+              data: [{
+                id: '1',
+                type: 'droid'
+              }, {
+                id: '2',
+                type: 'droid'
+              }]
+            }
+          }
+        },
+        included: [{
+          id: '1',
+          type: 'droid',
+          attributes: {
+            type: 'protocol',
+            model: 'C3PO'
+          },
+          relationships: {}
+        }, {
+          id: '2',
+          type: 'droid',
+          attributes: {
+            type: 'astromech',
+            model: 'R2D2'
+          },
+          relationships: {}
+        }]
       };
 
-  let parsed = serializer.extract(this.store, type, hash, null, 'find');
-
-  assert.ok(true);
+  assert.deepEqual(expected, parsed);
 });
