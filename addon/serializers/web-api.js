@@ -51,14 +51,13 @@ export default DS.RESTSerializer.extend({
   },
 
   extractErrors: function (store, typeClass, payload, id) {
-    let payloadErrors = null;
     if (payload && typeof payload === 'object' && payload.errors) {
       this.clearModelName(payload.errors, typeClass.modelName);
     }
 
     return this._super(store, typeClass, payload, id);
   },
-  
+
   clearModelName: function(errors, modelName) {
     // Since the new JSON API InvalidError structure appeared we need to handle it.
     // I know it sucks but for now the extractErrors hook gets the data pre-coocked into
