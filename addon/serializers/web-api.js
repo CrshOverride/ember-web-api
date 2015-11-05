@@ -4,6 +4,7 @@ import { pluralize } from 'ember-inflector';
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
+
   normalizeResponse: function(store, primaryModelClass, payload, id, requestType) {
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
@@ -51,24 +52,43 @@ export default DS.RESTSerializer.extend({
   },
 
   extractErrors: function (store, typeClass, payload, id) {
-    if (payload && typeof payload === 'object' && payload.errors) {
-      this.clearModelName(payload.errors, typeClass.modelName);
+    let strippedErrors = {},
+        payloadIsObject = payload && typeof payload === 'object';
+
+    if (payloadIsObject && payload.message) {
+      delete payload.message;
+    }
+
+    if (payload && typeof payload === 'object' && payload.modelState) {
+      Object.keys(payload.modelState).forEach(key => {
+        strippedErrors[key.replace(typeClass.modelName + '.','')] = payload.modelState[key];
+      });
+
+      payload.errors = this._errorsHashToArray(strippedErrors);
+
+      delete payload.modelState;
     }
 
     return this._super(store, typeClass, payload, id);
   },
 
-  clearModelName: function(errors, modelName) {
-    // Since the new JSON API InvalidError structure appeared we need to handle it.
-    // I know it sucks but for now the extractErrors hook gets the data pre-coocked into
-    // JSON API errors :\
-    errors.forEach(function(error) {
-      var pointer = error.source.pointer;
-      let lastIndex =  error.source.pointer.lastIndexOf('/') + 1;
-      pointer = pointer.replace('/data/attributes/' + modelName, '/data/attributes/');
-      pointer = pointer.slice(0, lastIndex) + pointer.slice(lastIndex).camelize();
-      error.source.pointer = pointer;
-    });
+  sideloadItem: function(store, payload, type, record) {
+    if (!(record instanceof Object)) {
+      return false;
+    }
+
+    let key = pluralize(type.modelName),
+        arr = payload[key] || Ember.A([]),
+        pk = store.serializerFor(type.modelName).primaryKey,
+        id = record[pk];
+
+    if(typeof arr.findBy(pk, id) !== 'undefined') {
+      return true;
+    }
+
+    arr.push(record);
+    payload[key] = arr;
+    return true;
   },
 
   _extractRelationships: function(store, payload, record, type) {
@@ -93,22 +113,24 @@ export default DS.RESTSerializer.extend({
     });
   },
 
-  sideloadItem: function(store, payload, type, record) {
-    if (!(record instanceof Object)) {
-      return false;
+  _errorsHashToArray: function (errors) {
+    let out = [];
+
+    if (Ember.isPresent(errors)) {
+      Object.keys(errors).forEach(function(key) {
+        let messages = Ember.makeArray(errors[key]);
+        for (let i = 0; i < messages.length; i++) {
+          out.push({
+            title: 'Invalid Attribute',
+            detail: messages[i],
+            source: {
+              pointer: `/data/attributes/${key}`
+            }
+          });
+        }
+      });
     }
 
-    let key = pluralize(type.modelName),
-        arr = payload[key] || Ember.A([]),
-        pk = store.serializerFor(type.modelName).primaryKey,
-        id = record[pk];
-
-    if(typeof arr.findBy(pk, id) !== 'undefined') {
-      return true;
-    }
-
-    arr.push(record);
-    payload[key] = arr;
-    return true;
+    return out;
   }
 });
