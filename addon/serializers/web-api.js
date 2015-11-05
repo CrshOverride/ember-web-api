@@ -50,17 +50,12 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  normalizeErrors: function normalizeErrors(typeClass, payload) {
-    let payloadKey = `${typeClass.modelName}.`,
-        keys = Object.keys(payload);
+  extractErrors: function (store, typeClass, payload, id) {
+    if (payload && typeof payload === 'object' && payload.errors) {
+      this.clearModelName(payload.errors, typeClass.modelName);
+    }
 
-    keys.forEach(function(key) {
-      if(payload.hasOwnProperty(key)) {
-        payload[key.replace(payloadKey, '').camelize()] = payload[key];
-        delete payload[key];
-      }
-    });
-    return this._super(typeClass, payload);
+    return this._super(store, typeClass, payload, id);
   },
 
   clearModelName: function(errors, modelName) {
