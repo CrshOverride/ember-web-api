@@ -4,22 +4,22 @@ import { pluralize } from 'ember-inflector';
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
-  normalizeResponse: function(store, primaryType, payload, id, requestType) {
+  normalizeResponse: function(store, primaryModelClass, payload, id, requestType) {
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
-        key = isCollection ? pluralize(primaryType.modelName) : primaryType.modelName;
+        key = isCollection ? pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
 
     payloadWithRoot[key] = payload;
 
     if(isCollection) {
       payload.forEach((item) => {
-        this._extractRelationships(store, payloadWithRoot, item, primaryType);
+        this._extractRelationships(store, payloadWithRoot, item, primaryModelClass);
       });
     } else {
-      this._extractRelationships(store, payloadWithRoot, payload, primaryType);
+      this._extractRelationships(store, payloadWithRoot, payload, primaryModelClass);
     }
 
-    return this._super(store, primaryType, payloadWithRoot, id, requestType);
+    return this._super(store, primaryModelClass, payloadWithRoot, id, requestType);
   },
 
   serializeHasMany: function(snapshot, json, relationship) {
