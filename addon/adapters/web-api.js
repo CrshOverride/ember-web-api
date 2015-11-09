@@ -10,6 +10,8 @@ export default DS.RESTAdapter.extend({
     return VALIDATION_ERROR_STATUSES.indexOf(status) >= 0;
   },
 
+  // Override the parseErrorResponse method from RESTAdapter
+  // so that we can munge the modelState into an errors collection.
   parseErrorResponse: function(responseText) {
     let json = this._super(responseText),
         strippedErrors = {},
@@ -25,32 +27,11 @@ export default DS.RESTAdapter.extend({
         strippedErrors[newKey] = json.modelState[key];
       });
 
-      json.errors = this._errorsHashToArray(strippedErrors);
+      json.errors = this.strippedErrors;
 
       delete json.modelState;
     }
 
     return json;
-  },
-
-  _errorsHashToArray: function (errors) {
-    let out = [];
-
-    if (Ember.isPresent(errors)) {
-      Object.keys(errors).forEach(function(key) {
-        let messages = Ember.makeArray(errors[key]);
-        for (let i = 0; i < messages.length; i++) {
-          out.push({
-            title: 'Invalid Attribute',
-            detail: messages[i],
-            source: {
-              pointer: `/data/attributes/${key}`
-            }
-          });
-        }
-      });
-    }
-
-    return out;
   }
 });
