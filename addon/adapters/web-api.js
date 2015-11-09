@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-import {camelize} from 'ember-inflector';
 
 const VALIDATION_ERROR_STATUSES = [400, 422];
 
@@ -22,7 +21,7 @@ export default DS.RESTAdapter.extend({
 
     if (jsonIsObject && json.modelState) {
       Object.keys(json.modelState).forEach(key => {
-        let newKey = camelize(key.substring(key.indexOf('.') + 1));
+        let newKey = key.substring(key.indexOf('.') + 1).camelize();
         strippedErrors[newKey] = json.modelState[key];
       });
 
