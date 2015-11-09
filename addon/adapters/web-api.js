@@ -1,38 +1,38 @@
 import DS from 'ember-data';
-import Ember from 'ember';
 
 const VALIDATION_ERROR_STATUSES = [400, 422];
 
 export default DS.RESTAdapter.extend({
   namespace: 'api',
 
-  isInvalid: function(status, headers, payload) {
-    if (VALIDATION_ERROR_STATUSES.indexOf(status) >= 0) {
-      // handleResponse expects the erros in the errors property
-      payload.errors = this.errorsHashToArray(payload.modelState);
-      return true;
-    }
-    return false;
+  isInvalid: function(status) {
+    return VALIDATION_ERROR_STATUSES.indexOf(status) >= 0;
   },
 
-  errorsHashToArray: function (errors) {
-    let out = [];
+  // Override the parseErrorResponse method from RESTAdapter
+  // so that we can munge the modelState into an errors collection.
+  // The source of the original method can be found at:
+  // https://github.com/emberjs/data/blob/v2.1.0/packages/ember-data/lib/adapters/rest-adapter.js#L899
+  parseErrorResponse: function(responseText) {
+    let json = this._super(responseText),
+        strippedErrors = {},
+        jsonIsObject = json && (typeof json === 'object');
 
-    if (Ember.isPresent(errors)) {
-      Object.keys(errors).forEach(function(key) {
-        let messages = Ember.makeArray(errors[key]);
-        for (let i = 0; i < messages.length; i++) {
-          out.push({
-            title: 'Invalid Attribute',
-            detail: messages[i],
-            source: {
-              pointer: `/data/attributes/${key}`
-            }
-          });
-        }
-      });
+    if (jsonIsObject && json.message) {
+      delete json.message;
     }
 
-    return out;
+    if (jsonIsObject && json.modelState) {
+      Object.keys(json.modelState).forEach(key => {
+        let newKey = key.substring(key.indexOf('.') + 1).camelize();
+        strippedErrors[newKey] = json.modelState[key];
+      });
+
+      json.errors = strippedErrors;
+
+      delete json.modelState;
+    }
+
+    return json;
   }
 });

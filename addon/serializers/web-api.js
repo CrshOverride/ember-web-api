@@ -4,7 +4,13 @@ import { pluralize } from 'ember-inflector';
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
+
   normalizeResponse: function(store, primaryModelClass, payload, id, requestType) {
+    // If the response is empty, return the appropriate JSON API response.
+    // Unfortunately, this._super apparently doesn't support this condition properly.
+    // Based on the documentation at: http://jsonapi.org/format/
+    if(payload === null) { return { data: null }; }
+
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
         key = isCollection ? pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
@@ -50,25 +56,23 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  extractErrors: function (store, typeClass, payload, id) {
-    if (payload && typeof payload === 'object' && payload.errors) {
-      this.clearModelName(payload.errors, typeClass.modelName);
+  sideloadItem: function(store, payload, type, record) {
+    if (!(record instanceof Object)) {
+      return false;
     }
 
-    return this._super(store, typeClass, payload, id);
-  },
+    let key = pluralize(type.modelName),
+        arr = payload[key] || Ember.A([]),
+        pk = store.serializerFor(type.modelName).primaryKey,
+        id = record[pk];
 
-  clearModelName: function(errors, modelName) {
-    // Since the new JSON API InvalidError structure appeared we need to handle it.
-    // I know it sucks but for now the extractErrors hook gets the data pre-coocked into
-    // JSON API errors :\
-    errors.forEach(function(error) {
-      var pointer = error.source.pointer;
-      let lastIndex =  error.source.pointer.lastIndexOf('/') + 1;
-      pointer = pointer.replace('/data/attributes/' + modelName, '/data/attributes/');
-      pointer = pointer.slice(0, lastIndex) + pointer.slice(lastIndex).camelize();
-      error.source.pointer = pointer;
-    });
+    if(typeof arr.findBy(pk, id) !== 'undefined') {
+      return true;
+    }
+
+    arr.push(record);
+    payload[key] = arr;
+    return true;
   },
 
   _extractRelationships: function(store, payload, record, type) {
@@ -92,23 +96,4 @@ export default DS.RESTSerializer.extend({
       }
     });
   },
-
-  sideloadItem: function(store, payload, type, record) {
-    if (!(record instanceof Object)) {
-      return false;
-    }
-
-    let key = pluralize(type.modelName),
-        arr = payload[key] || Ember.A([]),
-        pk = store.serializerFor(type.modelName).primaryKey,
-        id = record[pk];
-
-    if(typeof arr.findBy(pk, id) !== 'undefined') {
-      return true;
-    }
-
-    arr.push(record);
-    payload[key] = arr;
-    return true;
-  }
 });
