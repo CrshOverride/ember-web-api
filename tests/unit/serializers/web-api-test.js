@@ -113,3 +113,13 @@ test('it extracts errors properly', function(assert) {
 
   assert.deepEqual(expected, parsed);
 });
+
+test('it handles an empty response properly', function(assert) {
+  let serializer = this.subject(),
+      type = this.store.modelFor('droid'),
+      response = null,
+      parsed = serializer.normalizeResponse(this.store, type, response, 1, 'findBelongsTo'),
+      expected = { data: null };
+
+  assert.deepEqual(expected, parsed);
+});

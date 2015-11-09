@@ -6,6 +6,11 @@ export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
 
   normalizeResponse: function(store, primaryModelClass, payload, id, requestType) {
+    // If the response is empty, return the appropriate JSON API response.
+    // Unfortunately, this._super apparently doesn't support this condition properly.
+    // Based on the documentation at: http://jsonapi.org/format/
+    if(payload === null) { return { data: null }; }
+
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
         key = isCollection ? pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
