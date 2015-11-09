@@ -1,4 +1,3 @@
-import Ember from 'ember';
 import DS from 'ember-data';
 
 const VALIDATION_ERROR_STATUSES = [400, 422];
