@@ -12,6 +12,8 @@ export default DS.RESTAdapter.extend({
 
   // Override the parseErrorResponse method from RESTAdapter
   // so that we can munge the modelState into an errors collection.
+  // The source of the original method can be found at:
+  // https://github.com/emberjs/data/blob/v2.1.0/packages/ember-data/lib/adapters/rest-adapter.js#L899
   parseErrorResponse: function(responseText) {
     let json = this._super(responseText),
         strippedErrors = {},
