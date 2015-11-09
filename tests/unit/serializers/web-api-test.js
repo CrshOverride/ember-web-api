@@ -93,27 +93,6 @@ test('it parses a basic hasMany relationship', function(assert) {
   assert.deepEqual(expected, parsed);
 });
 
-test('it extracts errors properly', function(assert) {
-  let serializer = this.subject(),
-      type = this.store.modelFor('droid'),
-      response = {
-        message: 'These are not the droids you are looking for.',
-        modelState: {
-          'droid.id': [
-            "That droid's id doesn't exist."
-          ]
-        }
-      },
-      parsed = serializer.extractErrors(this.store, type, response, 1),
-      expected = {
-        id: [
-          "That droid's id doesn't exist."
-        ]
-      };
-
-  assert.deepEqual(expected, parsed);
-});
-
 test('it handles an empty response properly', function(assert) {
   let serializer = this.subject(),
       type = this.store.modelFor('droid'),

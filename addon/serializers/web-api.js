@@ -56,27 +56,6 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  extractErrors: function (store, typeClass, payload, id) {
-    let strippedErrors = {},
-        payloadIsObject = payload && typeof payload === 'object';
-
-    if (payloadIsObject && payload.message) {
-      delete payload.message;
-    }
-
-    if (payload && typeof payload === 'object' && payload.modelState) {
-      Object.keys(payload.modelState).forEach(key => {
-        strippedErrors[key.replace(typeClass.modelName + '.','')] = payload.modelState[key];
-      });
-
-      payload.errors = this._errorsHashToArray(strippedErrors);
-
-      delete payload.modelState;
-    }
-
-    return this._super(store, typeClass, payload, id);
-  },
-
   sideloadItem: function(store, payload, type, record) {
     if (!(record instanceof Object)) {
       return false;
@@ -117,25 +96,4 @@ export default DS.RESTSerializer.extend({
       }
     });
   },
-
-  _errorsHashToArray: function (errors) {
-    let out = [];
-
-    if (Ember.isPresent(errors)) {
-      Object.keys(errors).forEach(function(key) {
-        let messages = Ember.makeArray(errors[key]);
-        for (let i = 0; i < messages.length; i++) {
-          out.push({
-            title: 'Invalid Attribute',
-            detail: messages[i],
-            source: {
-              pointer: `/data/attributes/${key}`
-            }
-          });
-        }
-      });
-    }
-
-    return out;
-  }
 });
