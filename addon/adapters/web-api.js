@@ -28,7 +28,7 @@ export default DS.RESTAdapter.extend({
         strippedErrors[newKey] = json.modelState[key];
       });
 
-      json.errors = this.strippedErrors;
+      json.errors = strippedErrors;
 
       delete json.modelState;
     }
