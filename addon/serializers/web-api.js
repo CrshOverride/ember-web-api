@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-import { pluralize } from 'ember-inflector';
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
@@ -13,7 +12,7 @@ export default DS.RESTSerializer.extend({
 
     let payloadWithRoot = {},
         isCollection = payload.length > 0,
-        key = isCollection ? pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
+        key = isCollection ? Ember.Inflector.inflector.pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
 
     payloadWithRoot[key] = payload;
 
@@ -61,7 +60,7 @@ export default DS.RESTSerializer.extend({
       return false;
     }
 
-    let key = pluralize(type.modelName),
+    let key = Ember.Inflector.inflector.pluralize(type.modelName),
         arr = payload[key] || Ember.A([]),
         pk = store.serializerFor(type.modelName).primaryKey,
         id = record[pk];
