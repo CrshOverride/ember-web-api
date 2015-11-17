@@ -3,6 +3,8 @@ language: node_js
 node_js:
   - "0.12"
 
+sudo: false
+
 cache:
   directories:
     - node_modules
@@ -27,10 +29,6 @@ install:
   - npm install -g bower
   - npm install
   - bower install
-  - sudo pip install codecov
 
 script:
   - ember try $EMBER_TRY_SCENARIO test
-
-after_success:
-  - codecov
