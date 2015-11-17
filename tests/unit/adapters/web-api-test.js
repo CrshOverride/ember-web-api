@@ -7,6 +7,23 @@ moduleFor('adapter:web-api', 'Unit | Adapter | web api', {
 
 // Replace this with your real tests.
 test('it exists', function(assert) {
-  var adapter = this.subject();
-  assert.ok(adapter);
+  let error = {
+        message: 'An error has occurred',
+        modelState: {
+            'droid.Name': 'This name has already been taken'
+        }
+      },
+      adapter = this.subject(),
+      parsed = adapter.parseErrorResponse(JSON.stringify(error)),
+      expected = {
+        errors: [{
+          detail: 'This name has already been taken',
+          source: {
+            pointer: '/data/attributes/name'
+          },
+          title: 'Invalid Attribute'
+        }]
+      };
+
+  assert.deepEqual(parsed, expected);
 });
