@@ -24,12 +24,12 @@ before_install:
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
   - "npm config set spin false"
   - "npm install -g npm@^2"
-  - sudo pip install codecov
 
 install:
   - npm install -g bower
   - npm install
   - bower install
+  - pip install codecov
 
 script:
   - ember try $EMBER_TRY_SCENARIO test
