@@ -27,7 +27,7 @@ install:
   - npm install -g bower
   - npm install
   - bower install
-  - pip install codecov
+  - sudo pip install codecov
 
 script:
   - ember try $EMBER_TRY_SCENARIO test
