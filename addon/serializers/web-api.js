@@ -69,6 +69,10 @@ export default DS.RESTSerializer.extend({
       return true;
     }
 
+    record.attributes = Ember.copy(record, true);
+    record.type = type.modelName;
+    delete record.attributes.id;
+
     arr.push(record);
     payload[key] = arr;
     return true;
