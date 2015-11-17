@@ -24,7 +24,7 @@ before_install:
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
   - "npm config set spin false"
   - "npm install -g npm@^2"
-  - pip install codecov
+  - sudo pip install codecov
 
 install:
   - npm install -g bower
