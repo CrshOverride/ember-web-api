@@ -32,3 +32,6 @@ install:
 
 script:
   - ember try $EMBER_TRY_SCENARIO test
+
+after_success:
+  - cat ./coverage/coverage.dat | ./node_modules/.bin/codecov
