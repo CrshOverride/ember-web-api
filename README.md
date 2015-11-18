@@ -24,10 +24,18 @@ settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
 ### Installation
 
-Installation is a breeze. For Ember 1.13.7 and higher, simply run (from your Ember CLI project):
+Installation is a breeze. You just need to ensure that you install the proper version of Ember Web API for your version of Ember Data.
+
+If you're using Ember Data 2.0+, you're in luck! You can just install the latest stable release:
 
 ```
 ember install ember-web-api
+```
+
+For versions between 1.13.0 and 1.13.15, you should be on the `0.0.7` release:
+
+```
+ember install ember-web-api@0.0.7
 ```
 
 If you're using an older version of Ember, you'll have to use one of the older releases:
