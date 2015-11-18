@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import DS from 'ember-data';
 
 const VALIDATION_ERROR_STATUSES = [400, 422];
@@ -24,11 +25,11 @@ export default DS.RESTAdapter.extend({
 
     if (jsonIsObject && json.modelState) {
       Object.keys(json.modelState).forEach(key => {
-        let newKey = key.substring(key.indexOf('.') + 1).camelize();
+        let newKey = Ember.String.camelize(key.substring(key.indexOf('.') + 1));
         strippedErrors[newKey] = json.modelState[key];
       });
 
-      json.errors = strippedErrors;
+      json.errors = DS.errorsHashToArray(strippedErrors);
 
       delete json.modelState;
     }

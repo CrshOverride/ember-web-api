@@ -35,7 +35,7 @@ test('it parses a simple record', function(assert) {
         included: []
       };
 
-  assert.deepEqual(expected, parsed);
+  assert.deepEqual(parsed, expected);
 });
 
 test('it parses a basic hasMany relationship', function(assert) {
@@ -90,7 +90,7 @@ test('it parses a basic hasMany relationship', function(assert) {
         }]
       };
 
-  assert.deepEqual(expected, parsed);
+  assert.deepEqual(parsed, expected);
 });
 
 test('it handles an empty response properly', function(assert) {
@@ -100,5 +100,5 @@ test('it handles an empty response properly', function(assert) {
       parsed = serializer.normalizeResponse(this.store, type, response, 1, 'findBelongsTo'),
       expected = { data: null };
 
-  assert.deepEqual(expected, parsed);
+  assert.deepEqual(parsed, expected);
 });
