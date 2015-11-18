@@ -10,8 +10,8 @@ var options = {
     lcovOptions: {
       outputFile: 'coverage/coverage.dat',
       renamer: function(moduleName) {
-        var expression = /^APP_NAME/;
-        return moduleName.replace(expression, 'app') + '.js';
+        var expression = /^ember-web-api/;
+        return moduleName.replace(expression, 'addon') + '.js';
       }
     },
     reporters: ['lcov'],
