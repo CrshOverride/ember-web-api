@@ -8,7 +8,11 @@ var options = {
   enableCoverage: true,
   cliOptions: {
     lcovOptions: {
-      outputFile: 'coverage/coverage.dat'
+      outputFile: 'coverage/coverage.dat',
+      renamer: function(moduleName) {
+        var expression = /^APP_NAME/;
+        return moduleName.replace(expression, 'app') + '.js';
+      }
     },
     reporters: ['lcov'],
     autostart: true
