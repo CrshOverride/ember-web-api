@@ -19,9 +19,19 @@ export default DS.RESTSerializer.extend({
     if(isCollection) {
       payload.forEach((item) => {
         this._extractRelationships(store, payloadWithRoot, item, primaryModelClass);
+        item.attributes = Ember.copy(item, true);
+        if(item.type) {
+          item.type = primaryModelClass.modelName;
+        }
+        delete item.attributes.id;
       });
     } else {
       this._extractRelationships(store, payloadWithRoot, payload, primaryModelClass);
+      payload.attributes = Ember.copy(payload, true);
+      if(payload.type) {
+        payload.type = primaryModelClass.modelName;
+      }
+      delete payload.attributes.id;
     }
 
     return this._super(store, primaryModelClass, payloadWithRoot, id, requestType);

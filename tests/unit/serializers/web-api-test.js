@@ -12,6 +12,11 @@ moduleFor('serializer:web-api', 'Unit | Serializer | web api', {
   }
 });
 
+test('it should be using the new serializer api', function(assert) {
+  let serializer = this.subject();
+  assert.ok(serializer.isNewSerializerAPI);
+});
+
 // Replace this with your real tests.
 test('it parses a simple record', function(assert) {
   let serializer = this.subject(),
@@ -32,6 +37,43 @@ test('it parses a simple record', function(assert) {
           },
           relationships: {}
         },
+        included: []
+      };
+
+  assert.deepEqual(parsed, expected);
+});
+
+test('it parses a simple record collection', function(assert) {
+  let serializer = this.subject(),
+      type = this.store.modelFor('droid'),
+      response = [{
+        id: 1,
+        type: 'protocol',
+        model: 'C3PO'
+      }, {
+        id: 2,
+        type: 'astromech',
+        model: 'R2D2'
+      }],
+      parsed = serializer.normalizeResponse(this.store, type, response, null, 'findAll'),
+      expected = {
+        data: [{
+          type: 'droid',
+          id: '1',
+          attributes: {
+            type: 'protocol',
+            model: 'C3PO'
+          },
+          relationships: {}
+        }, {
+          type: 'droid',
+          id: '2',
+          attributes: {
+            type: 'astromech',
+            model: 'R2D2'
+          },
+          relationships: {}
+        }],
         included: []
       };
 
@@ -89,6 +131,8 @@ test('it parses a basic hasMany relationship', function(assert) {
           relationships: {}
         }]
       };
+
+  console.log(parsed);
 
   assert.deepEqual(parsed, expected);
 });

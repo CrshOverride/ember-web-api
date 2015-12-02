@@ -5,8 +5,16 @@ moduleFor('adapter:web-api', 'Unit | Adapter | web api', {
   // needs: ['serializer:foo']
 });
 
-// Replace this with your real tests.
-test('it exists', function(assert) {
+test('it is invlaid when the status is either 400 or 422 but valid otherwise', function(assert) {
+  let adapter = this.subject();
+
+  assert.ok(adapter.isInvalid(400), '400 should not be valid');
+  assert.ok(adapter.isInvalid(422), '422 should not be valid');
+  assert.notOk(adapter.isInvalid(200), '200 should be valid');
+  assert.notOk(adapter.isInvalid(301), '301 should be valid');
+});
+
+test('it parses errors properly', function(assert) {
   let error = {
         message: 'An error has occurred',
         modelState: {
