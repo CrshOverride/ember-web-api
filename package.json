@@ -1,6 +1,6 @@
 {
   "name": "ember-web-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ember CLI Addon for connecting Ember Data to ASP.NET Web API.",
   "directories": {
     "doc": "doc",
