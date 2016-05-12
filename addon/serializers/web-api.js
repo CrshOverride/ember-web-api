@@ -18,6 +18,7 @@ export default DS.RESTSerializer.extend({
 
     if(isCollection) {
       payload.forEach((item) => {
+        this._mapRecord(item);
         this._extractRelationships(store, payloadWithRoot, item, primaryModelClass);
         item.attributes = Ember.copy(item, true);
         if(item.type) {
@@ -26,6 +27,7 @@ export default DS.RESTSerializer.extend({
         delete item.attributes.id;
       });
     } else {
+      this._mapRecord(payload);
       this._extractRelationships(store, payloadWithRoot, payload, primaryModelClass);
       payload.attributes = Ember.copy(payload, true);
       if(payload.type) {
@@ -40,10 +42,10 @@ export default DS.RESTSerializer.extend({
   serializeHasMany: function(snapshot, json, relationship) {
     let key = this.payloadKeyFromModelName(relationship.key);
     if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
-      json[key] = [];
+      json[key.capitalize()] = [];
 
       snapshot.hasMany(relationship.key).forEach((i) => {
-        json[key].push(this.serialize(i, { includeId: true }));
+        json[key.capitalize()].push(this.serialize(i, { includeId: true }));
       });
     }
   },
@@ -60,7 +62,7 @@ export default DS.RESTSerializer.extend({
 
     for(prop in serialized) {
       if(serialized.hasOwnProperty(prop)) {
-        json[prop] = serialized[prop];
+        json[prop.capitalize()] = serialized[prop];
       }
     }
   },
@@ -108,5 +110,16 @@ export default DS.RESTSerializer.extend({
         }
       }
     });
+  },
+  
+  _mapRecord: function(record) {
+    var propertyName, value, newPropertyName;
+    let item = record;
+    for (propertyName in record) {
+      value = item[propertyName];
+      newPropertyName = propertyName.camelize();
+      item[newPropertyName] = value;
+      delete item[propertyName];
+    }
   },
 });
