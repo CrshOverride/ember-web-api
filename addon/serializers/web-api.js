@@ -41,10 +41,11 @@ export default DS.RESTSerializer.extend({
     let key = this.payloadKeyFromModelName(relationship.key);
     if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
       json[key] = [];
-
-      snapshot.hasMany(relationship.key).forEach((i) => {
-        json[key].push(this.serialize(i, { includeId: true }));
-      });
+      if(snapshot.hasMany(relationship.key)){
+        snapshot.hasMany(relationship.key).forEach((i) => {
+          json[key].push(this.serialize(i, { includeId: true }));
+        });
+      }
     }
   },
 
