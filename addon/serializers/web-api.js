@@ -1,5 +1,7 @@
 import Ember from 'ember';
 import DS from 'ember-data';
+import { A } from '@ember/array';
+import { copy } from '@ember/object/internals';
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
@@ -19,7 +21,7 @@ export default DS.RESTSerializer.extend({
     if(isCollection) {
       payload.forEach((item) => {
         this._extractRelationships(store, payloadWithRoot, item, primaryModelClass);
-        item.attributes = Ember.copy(item, true);
+        item.attributes = copy(item, true);
         if(item.type) {
           item.type = primaryModelClass.modelName;
         }
@@ -27,7 +29,7 @@ export default DS.RESTSerializer.extend({
       });
     } else {
       this._extractRelationships(store, payloadWithRoot, payload, primaryModelClass);
-      payload.attributes = Ember.copy(payload, true);
+      payload.attributes = copy(payload, true);
       if(payload.type) {
         payload.type = primaryModelClass.modelName;
       }
@@ -71,7 +73,7 @@ export default DS.RESTSerializer.extend({
     }
 
     let key = Ember.Inflector.inflector.pluralize(type.modelName),
-        arr = payload[key] || Ember.A([]),
+        arr = payload[key] || A([]),
         pk = store.serializerFor(type.modelName).primaryKey,
         id = record[pk];
 
@@ -79,7 +81,7 @@ export default DS.RESTSerializer.extend({
       return true;
     }
 
-    record.attributes = Ember.copy(record, true);
+    record.attributes = copy(record, true);
     record.type = type.modelName;
     delete record.attributes.id;
 
