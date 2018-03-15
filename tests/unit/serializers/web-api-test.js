@@ -1,5 +1,5 @@
-import Ember from 'ember';
 import { moduleFor, test } from 'ember-qunit';
+import { A } from '@ember/array';
 
 moduleFor('serializer:web-api', 'Unit | Serializer | web api', {
   // Specify the other units that are required for this test.
@@ -87,7 +87,7 @@ test('it parses a basic hasMany relationship', function(assert) {
         id: 1,
         name: 'Luke Skywalker',
         isJedi: true,
-        droids: Ember.A([
+        droids: A([
           { id: 1, type: 'protocol', model: 'C3PO' },
           { id: 2, type: 'astromech', model: 'R2D2' }
         ])
@@ -131,8 +131,6 @@ test('it parses a basic hasMany relationship', function(assert) {
           relationships: {}
         }]
       };
-
-  console.log(parsed);
 
   assert.deepEqual(parsed, expected);
 });
