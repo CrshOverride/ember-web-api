@@ -1,28 +1,29 @@
-import Ember from 'ember';
 import DS from 'ember-data';
 import { A } from '@ember/array';
-import { copy } from '@ember/object/internals';
+import { copy } from 'ember-copy';
+import Inflector from 'ember-inflector'
 
 export default DS.RESTSerializer.extend({
   isNewSerializerAPI: true,
 
-  normalizeResponse: function(store, primaryModelClass, payload, id, requestType) {
+  normalizeResponse: function (store, primaryModelClass, payload, id, requestType) {
     // If the response is empty, return the appropriate JSON API response.
     // Unfortunately, this._super apparently doesn't support this condition properly.
     // Based on the documentation at: http://jsonapi.org/format/
-    if(payload === null) { return { data: null }; }
+    if (payload === null) { return { data: null }; }
 
     let payloadWithRoot = {},
-        isCollection = payload.length > 0,
-        key = isCollection ? Ember.Inflector.inflector.pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
+      isCollection = payload.length > 0,
+      key = isCollection ? Inflector.inflector.pluralize(primaryModelClass.modelName) : primaryModelClass.modelName;
 
     payloadWithRoot[key] = payload;
+    let type = null;
 
-    if(isCollection) {
+    if (isCollection) {
       payload.forEach((item) => {
         this._extractRelationships(store, payloadWithRoot, item, primaryModelClass);
         item.attributes = copy(item, true);
-        if(item.type) {
+        if (item.type) {
           item.type = primaryModelClass.modelName;
         }
         delete item.attributes.id;
@@ -30,16 +31,19 @@ export default DS.RESTSerializer.extend({
     } else {
       this._extractRelationships(store, payloadWithRoot, payload, primaryModelClass);
       payload.attributes = copy(payload, true);
-      if(payload.type) {
+      if (payload.type) {
+        type = payload.type;
         payload.type = primaryModelClass.modelName;
       }
       delete payload.attributes.id;
     }
 
-    return this._super(store, primaryModelClass, payloadWithRoot, id, requestType);
+    let retObj = this._super(store, primaryModelClass, payloadWithRoot, id, requestType);
+    if (!isCollection && type) retObj.data.attributes.type = type;
+    return retObj;
   },
 
-  serializeHasMany: function(snapshot, json, relationship) {
+  serializeHasMany: function (snapshot, json, relationship) {
     let key = this.payloadKeyFromModelName(relationship.key);
     if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
       json[key] = [];
@@ -50,34 +54,34 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  serializeIntoHash: function(json, typeClass, snapshot, options) {
-    if(!options) {
+  serializeIntoHash: function (json, typeClass, snapshot, options) {
+    if (!options) {
       options = { includeId: true };
     } else {
       options.includeId = true;
     }
 
     var serialized = this.serialize(snapshot, options),
-        prop;
+      prop;
 
-    for(prop in serialized) {
-      if(serialized.hasOwnProperty(prop)) {
+    for (prop in serialized) {
+      if (serialized.hasOwnProperty(prop)) {
         json[prop] = serialized[prop];
       }
     }
   },
 
-  sideloadItem: function(store, payload, type, record) {
+  sideloadItem: function (store, payload, type, record) {
     if (!(record instanceof Object)) {
       return false;
     }
 
-    let key = Ember.Inflector.inflector.pluralize(type.modelName),
-        arr = payload[key] || A([]),
-        pk = store.serializerFor(type.modelName).primaryKey,
-        id = record[pk];
+    let key = Inflector.inflector.pluralize(type.modelName),
+      arr = payload[key] || A([]),
+      pk = store.serializerFor(type.modelName).primaryKey,
+      id = record[pk];
 
-    if(typeof arr.findBy(pk, id) !== 'undefined') {
+    if (typeof arr.findBy(pk, id) !== 'undefined') {
       return true;
     }
 
@@ -90,20 +94,20 @@ export default DS.RESTSerializer.extend({
     return true;
   },
 
-  _extractRelationships: function(store, payload, record, type) {
+  _extractRelationships: function (store, payload, record, type) {
     type.eachRelationship((key, relationship) => {
       let relatedRecord = record[key];
 
-      if(relatedRecord) {
+      if (relatedRecord) {
         let relationshipType = typeof relationship.type === 'string' ? store.modelFor(relationship.type) : relationship.type;
-        if(relationship.kind === 'belongsTo') {
+        if (relationship.kind === 'belongsTo') {
           this.sideloadItem(store, payload, relationshipType, relatedRecord);
           record[key] = relatedRecord[store.serializerFor(relationshipType.modelName).primaryKey];
           this._extractRelationships(store, payload, relatedRecord, relationshipType);
         } else if (relationship.kind === 'hasMany') {
           relatedRecord.forEach((item, index) => {
             if (this.sideloadItem(store, payload, relationshipType, item)) {
-            relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
+              relatedRecord[index] = item[store.serializerFor(relationshipType.modelName).primaryKey];
             }
             this._extractRelationships(store, payload, item, relationshipType);
           });
